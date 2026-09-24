@@ -1,3 +1,6 @@
+-- PostgreSQL analysis of a customer shopping snapshot; not a longitudinal retention study.
+-- Segment labels are heuristic: New=0-1 prior purchases, Returning=2-10, Loyal>10.
+
 SELECT
 	*
 FROM customer
@@ -15,7 +18,7 @@ SELECT
 	customer_id,
 	purchase_amount
 FROM customer
-WHERE discount_applied = 'Yes' AND purchase_amount >= (SELECT AVG(purchase_amount) FROM customer);
+WHERE discount_applied = 'Yes' AND purchase_amount > (SELECT AVG(purchase_amount) FROM customer);
 
 -- Q3. Which are the top 5 products with the highest average review rating?
 SELECT
@@ -38,17 +41,17 @@ GROUP BY shipping_type;
 -- Compare average spend and total revenue between subscribers and non-subscribers.
 SELECT
 	subscription_status,
-	COUNT(customer_id) AS total_coustumers,
+	COUNT(customer_id) AS total_customers,
 	ROUND(AVG(purchase_amount),2) AS avg_spend,
 	ROUND(SUM(purchase_amount),2) AS total_revenue
 FROM customer
 GROUP BY subscription_status
-ORDER BY total_revenue, avg_spend DESC;
+ORDER BY total_revenue DESC, avg_spend DESC;
 
--- Q6. Which 5 products have the highest percentage of purchase with disconts applied?
+-- Q6. Which 5 products have the highest percentage of purchase with discounts applied?
 SELECT
 	item_purchased,
-	ROUND(100 * SUM(CASE
+	ROUND(100.0 * SUM(CASE
 		WHEN discount_applied = 'Yes' THEN 1
 		ELSE 0
 		END)/COUNT(*), 2) AS discount_rate
@@ -64,9 +67,11 @@ SELECT
 	customer_id,
 	previous_purchases,
 	(CASE
-		WHEN previous_purchases = 1 THEN 'New'
+		WHEN previous_purchases IS NULL OR previous_purchases < 0 THEN 'Unknown'
+		WHEN previous_purchases BETWEEN 0 AND 1 THEN 'New'
 		WHEN previous_purchases BETWEEN 2 AND 10 THEN 'Returning'
-		ELSE 'Loyal'
+		WHEN previous_purchases > 10 THEN 'Loyal'
+		ELSE 'Unknown'
 		END) AS customer_segment
 FROM customer)
 
@@ -84,7 +89,7 @@ SELECT
 	COUNT(customer_id) AS total_orders,
 	ROW_NUMBER() OVER(
 		PARTITION BY category
-		ORDER BY COUNT(customer_id) DESC
+		ORDER BY COUNT(customer_id) DESC, item_purchased
 	) AS item_rank
 FROM customer
 GROUP BY category, item_purchased
@@ -96,7 +101,8 @@ SELECT
 	item_purchased,
 	total_orders
 FROM item_counts
-WHERE item_rank <= 3;
+WHERE item_rank <= 3
+ORDER BY category, item_rank;
 
 -- Q9. Are customers who are repeat buyers (more than 5 previous purchases) also likely to subscribe?
 SELECT
@@ -113,3 +119,4 @@ SELECT
 FROM customer
 GROUP BY age_group
 ORDER BY total_revenue DESC;
+
