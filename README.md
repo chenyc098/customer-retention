@@ -35,9 +35,26 @@ Python standardizes column names, fills missing ratings using category medians, 
 | [Customer Behavior Dashboard.pbix](Customer%20Behavior%20Dashboard.pbix) | Downloadable Power BI report |
 | [requirements-customer-retention.txt](requirements-customer-retention.txt) | Python dependencies |
 
-## Data and results
+## Verified findings
 
-The input `customer_shopping_behavior.csv` is not included, and its original download URL has not been verified. Supply the original file to reproduce the analysis. Numerical business findings and a dashboard screenshot are not presented here until they can be checked against that data/report. The PBIX requires Power BI Desktop to inspect; GitHub cannot render it directly.
+![Customer shopping summary](assets/shopping-summary.svg)
+
+Calculated from the supplied `customer_shopping_behavior.csv` using the repository's Python preparation function:
+
+- **3,900 records and 3,900 unique customer IDs**, with **$233,081** in recorded purchase value and **$59.76** mean purchase amount.
+- **Clothing accounts for $104,264 (44.7%)** of recorded purchase value, the largest category in this sample.
+- **1,053 subscribers (27.0%)** average **$59.49** per recorded purchase, versus **$59.87** for 2,847 non-subscribers. This sample does not show higher mean purchase value among subscribers.
+- **37 missing review ratings** were filled using category medians; no ratings remained missing after preparation.
+
+The image is a Python summary of the CSV, not a screenshot of the Power BI report. These descriptive findings do not establish causality or represent lifetime customer value.
+
+## Data provenance
+
+The original CSV was supplied locally. Its publisher, download URL, license, and whether it is synthetic have not been verified, so results describe this sample only. The raw file is not redistributed. To reproduce, place the original file beside the script or supply `--csv`.
+
+SHA-256: `d1f0b8e906cde9d909361ea28f08b0f33e74659ed4a42cd1d747fd9db2ffa701`.
+
+The PBIX is available above and requires Power BI Desktop; GitHub cannot render it directly.
 
 ## Analytical assumptions
 
@@ -71,4 +88,4 @@ The Python and SQL files do not store a database password.
 
 ## Validation
 
-SQL percentage and segmentation corrections were checked using synthetic boundary cases. The original dataset and a live PostgreSQL database were not available for a full rerun.
+SQL percentage and segmentation corrections were checked using synthetic boundary cases. The Python preparation function was also run against the supplied 3,900-row CSV and the descriptive results above were recalculated. A live PostgreSQL/Power BI integration run was not performed. The synthetic SQL checks used SQLite for the shared percentage and CASE expressions, not PostgreSQL.
